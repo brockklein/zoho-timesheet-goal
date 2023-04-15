@@ -9,6 +9,7 @@ setTimeout(() => {
 		const container = document.createElement('div')
 		buttonToolbar.insertBefore(container, buttonToolbar.firstChild)
 		const root = createRoot(container)
+		container.style.margin = '-16px 0px';
 		root.render(
 			<StrictMode>
 				<HoursSummary />
