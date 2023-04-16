@@ -3,16 +3,18 @@ import React, { useEffect, useState } from 'react'
 // @ts-ignore
 import dayjsBusinessDays from 'dayjs-business-days'
 import { getHours } from './get-hours'
+import { getSelectedMonth } from './get-selected-month'
 
 dayjs.extend(dayjsBusinessDays)
 
-const getWeekdayCount = (): Dayjs[] => {
+const getWeekdayCountForSelectedMonth = (): Dayjs[] => {
+	const day = getSelectedMonth()
 	// @ts-ignore
-	return dayjs().businessDaysInMonth()
+	return day.businessDaysInMonth()
 }
 
 const getHoursGoal = () => {
-	const weekdays = getWeekdayCount()
+	const weekdays = getWeekdayCountForSelectedMonth()
 	return weekdays.reduce((total, day) => {
 		if (day.get('d') !== 4) total = total += 11
 		return total
@@ -20,12 +22,12 @@ const getHoursGoal = () => {
 }
 
 const getRemainingBusinessDays = () => {
-	const weekdays = getWeekdayCount()
+	const weekdays = getWeekdayCountForSelectedMonth()
 	return weekdays.filter((day) => day.isAfter(dayjs(), 'day')).length
 }
 
 const getHoursProgressTarget = () => {
-	const weekdays = getWeekdayCount()
+	const weekdays = getWeekdayCountForSelectedMonth()
 	return weekdays.reduce((total, day) => {
 		if (day.isBefore(dayjs(), 'day') && day.get('d') !== 4) {
 			total = total += 11
@@ -50,7 +52,7 @@ export const HoursSummary = () => {
 		}, 1000)
 	}, [])
 
-	if (!hoursWorked) return null
+	if (hoursWorked === null) return null
 
 	const overUnderHours = hoursWorked - hoursProgressTarget
 
@@ -97,14 +99,16 @@ export const HoursSummary = () => {
 								}}
 							>
 								{overUnderHours}
-								<>
-									{' '}
-									(
-									{Math.round(
-										(overUnderHours / getRemainingBusinessDays()) * -1 * 100
-									) / 100}
-									/day)
-								</>
+								{dayjs().month() === getSelectedMonth()?.month() && (
+									<>
+										{' '}
+										(
+										{Math.round(
+											(overUnderHours / getRemainingBusinessDays()) * -1 * 100
+										) / 100}
+										/day)
+									</>
+								)}
 							</div>
 						</td>
 					</tr>
