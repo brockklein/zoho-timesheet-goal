@@ -23,13 +23,16 @@ const getHoursGoal = () => {
 
 const getRemainingBusinessDays = () => {
 	const weekdays = getWeekdayCountForSelectedMonth()
-	return weekdays.filter((day) => day.isAfter(dayjs(), 'day')).length
+	return weekdays.filter(day => day.isAfter(dayjs(), 'day')).length
 }
 
 const getHoursProgressTarget = () => {
 	const weekdays = getWeekdayCountForSelectedMonth()
 	return weekdays.reduce((total, day) => {
-		if (day.isBefore(dayjs(), 'day') && day.get('d') !== 4) {
+		if (
+			(day.isBefore(dayjs(), 'day') || day.isSame(dayjs(), 'day')) &&
+			day.get('d') !== 4
+		) {
 			total = total += 11
 		}
 
