@@ -4,36 +4,28 @@ import React, { useEffect, useState } from 'react'
 import dayjsBusinessDays from 'dayjs-business-days'
 import { getHours } from './get-hours'
 import { getSelectedMonth } from './get-selected-month'
+import { getDailyGoalForMonth, getHoursGoal } from './get-hours-goal'
 
 dayjs.extend(dayjsBusinessDays)
 
-const getWeekdayCountForSelectedMonth = (): Dayjs[] => {
-	const day = getSelectedMonth()
+export const getWeekdayCountForSelectedMonth = (day: Dayjs): Dayjs[] => {
 	// @ts-ignore
 	return day.businessDaysInMonth()
 }
 
-const getHoursGoal = () => {
-	const weekdays = getWeekdayCountForSelectedMonth()
-	return weekdays.reduce((total, day) => {
-		if (day.get('d') !== 4) total = total += 11
-		return total
-	}, 0)
-}
-
-const getRemainingBusinessDays = () => {
-	const weekdays = getWeekdayCountForSelectedMonth()
+const getRemainingBusinessDays = (day: Dayjs) => {
+	const weekdays = getWeekdayCountForSelectedMonth(day)
 	return weekdays.filter(day => day.isAfter(dayjs(), 'day')).length
 }
 
-const getHoursProgressTarget = () => {
-	const weekdays = getWeekdayCountForSelectedMonth()
+const getHoursProgressTarget = (day: Dayjs) => {
+	const weekdays = getWeekdayCountForSelectedMonth(day)
 	return weekdays.reduce((total, day) => {
 		if (
 			(day.isBefore(dayjs(), 'day') || day.isSame(dayjs(), 'day')) &&
 			day.get('d') !== 4
 		) {
-			total = total += 11
+			total = total += getDailyGoalForMonth(day)
 		}
 
 		return total
@@ -41,17 +33,25 @@ const getHoursProgressTarget = () => {
 }
 
 export const HoursSummary = () => {
+	const [selectedDay, setSelectedDay] = useState(getSelectedMonth())
 	const [hoursWorked, setHoursWorked] = useState(getHours())
-	const [hoursGoal, setHoursGoal] = useState(getHoursGoal())
+	const [hoursGoal, setHoursGoal] = useState(
+		selectedDay ? getHoursGoal(selectedDay) : 0
+	)
 	const [hoursProgressTarget, setHoursProgressTarget] = useState(
-		getHoursProgressTarget()
+		selectedDay ? getHoursProgressTarget(selectedDay) : 0
 	)
 
 	useEffect(() => {
 		setInterval(() => {
+			const selectedDay = getSelectedMonth()
+
+			if (!selectedDay) return
+
+			setSelectedDay(selectedDay)
 			setHoursWorked(getHours())
-			setHoursGoal(getHoursGoal())
-			setHoursProgressTarget(getHoursProgressTarget())
+			setHoursGoal(getHoursGoal(selectedDay))
+			setHoursProgressTarget(getHoursProgressTarget(selectedDay))
 		}, 1000)
 	}, [])
 
@@ -79,9 +79,7 @@ export const HoursSummary = () => {
 					</tr>
 					<tr style={{ lineHeight: 1 }}>
 						<td>
-							<div style={{ marginRight: 10, fontWeight: 'bold' }}>
-								Progress
-							</div>
+							<div style={{ marginRight: 10, fontWeight: 'bold' }}>Progress</div>
 						</td>
 						<td>
 							{hoursWorked} of {hoursProgressTarget}
@@ -107,7 +105,11 @@ export const HoursSummary = () => {
 										{' '}
 										(
 										{Math.round(
-											(overUnderHours / getRemainingBusinessDays()) * -1 * 100
+											selectedDay
+												? (overUnderHours / getRemainingBusinessDays(selectedDay)) *
+														-1 *
+														100
+												: 0
 										) / 100}
 										/day)
 									</>
