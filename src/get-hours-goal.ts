@@ -14,8 +14,8 @@ export const getDailyGoalForMonth = (day: Dayjs) => {
 	const month = day.month()
 
 	if (month <= 4) return 11
-	if (month >= 5 && month <= 8) return 7.5
+	if (month === 8) return 10
 	if (month === 9) return 5
 	if (month === 10) return 7.5
-	return 5
+	return 7.5
 }
